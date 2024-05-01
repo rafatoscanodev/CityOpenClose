@@ -15,14 +15,14 @@ def create_card(image, badge, description, title, long_description):
 # Dados de exemplo para os cards
 data = [
     {
-        "image": "path_to_image1.jpg",
+        "image": "finep_1.png",
         "badge": "New",
         "description": "Short description 1",
         "title": "Card Title 1",
         "long_description": "This is a longer description of the first item."
     },
     {
-        "image": "path_to_image2.jpg",
+        "image": "facepe_1.png",
         "badge": "Sale",
         "description": "Short description 2",
         "title": "Card Title 2",
