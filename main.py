@@ -41,7 +41,7 @@ for item in data:
                 # Chamada ao assistente da OpenAI
                 response = requests.post(
                     'https://api.openai.com/v1/engines/davinci/completions',
-                    headers={'Authorization': 'sk-proj-jSqPfiPgH6xkICRIpulET3BlbkFJHHjg2C8ZFwoVOJeVNKex'},
+                    headers={'Authorization': ''},
                     json={
                         'prompt': user_input,
                         'max_tokens': 150
