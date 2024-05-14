@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
+import folium
+from streamlit_folium import folium_static
 
 # URL dos dados CSV
 url = "http://dados.recife.pe.gov.br/dataset/eb9b8a72-6e51-4da2-bc2b-9d83e1f198b9/resource/87fc9349-312c-4dcb-a311-1c97365bd9f5/download/empresasativender.csv"
@@ -44,18 +45,17 @@ if df is not None:
 
         # Verificar se as colunas de latitude e longitude existem
         if 'latitude' in df.columns and 'longitude' in df.columns:
-            # Visualização: Latitudes e Longitudes por nome_bairro
-            st.subheader("Latitudes e Longitudes por Nome Bairro")
-            fig, ax = plt.subplots(figsize=(10, 6))
-            for bairro in df['nome_bairro'].unique():
-                bairro_data = df[df['nome_bairro'] == bairro]
-                ax.scatter(bairro_data['longitude'], bairro_data['latitude'], label=bairro, alpha=0.6)
-            
-            ax.set_title("Latitudes e Longitudes por Nome Bairro")
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            ax.legend(title="Bairro")
-            st.pyplot(fig)
+            # Criar o mapa
+            st.subheader("Mapa de Latitudes e Longitudes por Nome Bairro")
+            mapa = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=12)
+
+            # Adicionar marcadores ao mapa
+            for index, row in df.iterrows():
+                folium.Marker([row['latitude'], row['longitude']],
+                              popup=row['nome_bairro']).add_to(mapa)
+
+            # Exibir o mapa no Streamlit
+            folium_static(mapa)
         else:
             st.error("As colunas 'latitude' e/ou 'longitude' não foram encontradas nos dados.")
     else:
