@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
+import folium
+from streamlit_folium import folium_static
 
 # URL dos dados JSON
 url = "http://dados.recife.pe.gov.br/dataset/eb9b8a72-6e51-4da2-bc2b-9d83e1f198b9/resource/b4c77553-4d25-4e3a-adb2-b225813a02f1/download/metadados_empativas.json"
@@ -16,48 +17,27 @@ def load_data(url):
 # Carregar os dados
 data = load_data(url)
 
-# Converter para DataFrame
+# Extrair dados de latitude e longitude
 df = pd.DataFrame(data)
+df = df[['latitude', 'longitude']].dropna()
 
-# Exibir título e descrição do aplicativo
-st.title("Visualizações de Empatias em Recife")
-st.write("Dados carregados da URL fornecida.")
+# Converter para tipo numérico
+df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
 
-# Exibir DataFrame
-st.write(df)
+# Remover linhas com valores inválidos
+df = df.dropna(subset=['latitude', 'longitude'])
 
-# Visualização 1: Contagem de registros por tipo de ação
-st.subheader("Contagem de Registros por Tipo de Ação")
-fig1, ax1 = plt.subplots()
-df['tipo_de_acao'].value_counts().plot(kind='bar', ax=ax1)
-ax1.set_title("Contagem de Registros por Tipo de Ação")
-ax1.set_xlabel("Tipo de Ação")
-ax1.set_ylabel("Contagem")
-st.pyplot(fig1)
+# Configurar o Streamlit
+st.title("Mapa Interativo de Empatias em Recife")
 
-# Visualização 2: Distribuição de Idades
-st.subheader("Distribuição de Idades")
-fig2, ax2 = plt.subplots()
-df['idade'].plot(kind='hist', bins=20, ax=ax2)
-ax2.set_title("Distribuição de Idades")
-ax2.set_xlabel("Idade")
-ax2.set_ylabel("Frequência")
-st.pyplot(fig2)
+# Criar o mapa
+mapa = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=12)
 
-# Visualização 3: Latitudes e Longitudes
-st.subheader("Latitudes e Longitudes")
-fig3, ax3 = plt.subplots()
-ax3.scatter(df['longitude'], df['latitude'])
-ax3.set_title("Latitudes e Longitudes")
-ax3.set_xlabel("Longitude")
-ax3.set_ylabel("Latitude")
-st.pyplot(fig3)
+# Adicionar pontos ao mapa
+for index, row in df.iterrows():
+    folium.Marker([row['latitude'], row['longitude']]).add_to(mapa)
 
-# Visualização 4: Contagem de Registros por Sexo
-st.subheader("Contagem de Registros por Sexo")
-fig4, ax4 = plt.subplots()
-df['sexo'].value_counts().plot(kind='bar', ax=ax4)
-ax4.set_title("Contagem de Registros por Sexo")
-ax4.set_xlabel("Sexo")
-ax4.set_ylabel("Contagem")
-st.pyplot(fig4)
+# Exibir o mapa no Streamlit
+folium_static(mapa)
+
