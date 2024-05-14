@@ -1,60 +1,42 @@
 import streamlit as st
+import pandas as pd
 import requests
+import folium
+from streamlit_folium import folium_static
 
-# Função para criar um card
-def create_card(image, badge, description, title, long_description):
-    with st.container():
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            st.image(image, width=100)
-        with col2:
-            st.write(f"**{title}**")
-            st.caption(description)
-            st.caption(badge)
+# URL dos dados JSON
+url = "http://dados.recife.pe.gov.br/dataset/eb9b8a72-6e51-4da2-bc2b-9d83e1f198b9/resource/b4c77553-4d25-4e3a-adb2-b225813a02f1/download/metadados_empativas.json"
 
-# Dados de exemplo para os cards
-data = [
-    {
-        "image": "finep_1.png",
-        "badge": "New",
-        "description": "Short description 1",
-        "title": "Card Title 1",
-        "long_description": "This is a longer description of the first item."
-    },
-    {
-        "image": "facepe_1.png",
-        "badge": "Sale",
-        "description": "Short description 2",
-        "title": "Card Title 2",
-        "long_description": "This is a longer description of the second item."
-    }
-]
+# Função para carregar dados
+@st.cache
+def load_data(url):
+    response = requests.get(url)
+    data = response.json()
+    return data
 
-# Renderização dos cards
-for item in data:
-    if st.button(item['title'], key=item['title']):
-        with st.container():
-            st.header(item['title'])
-            st.write(item['long_description'])
-            user_input = st.text_input("Enter your text here")
-            if st.button("Submit"):
-                # Chamada ao assistente da OpenAI
-                response = requests.post(
-                    'https://api.openai.com/v1/engines/davinci/completions',
-                    headers={'Authorization': ''},
-                    json={
-                        'prompt': user_input,
-                        'max_tokens': 150
-                    }
-                )
-                result_text = response.json()['choices'][0]['text'].strip()
-                st.download_button("Download Text", result_text, file_name="result.txt")
-                st.success(result_text)
+# Carregar os dados
+data = load_data(url)
 
-def main():
-    st.title("Your Streamlit App")
-    for item in data:
-        create_card(**item)
+# Extrair dados de latitude e longitude
+df = pd.DataFrame(data)
+df = df[['latitude', 'longitude']].dropna()
 
-if __name__ == "__main__":
-    main()
+# Converter para tipo numérico
+df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
+
+# Remover linhas com valores inválidos
+df = df.dropna(subset=['latitude', 'longitude'])
+
+# Configurar o Streamlit
+st.title("Mapa Interativo de Empatias em Recife")
+
+# Criar o mapa
+mapa = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=12)
+
+# Adicionar pontos ao mapa
+for index, row in df.iterrows():
+    folium.Marker([row['latitude'], row['longitude']]).add_to(mapa)
+
+# Exibir o mapa no Streamlit
+folium_static(mapa)
