@@ -9,11 +9,17 @@ url = "http://dados.recife.pe.gov.br/dataset/eb9b8a72-6e51-4da2-bc2b-9d83e1f198b
 @st.cache
 def load_data(url):
     try:
+        # Tentativa 1: Leitura padrão
         df = pd.read_csv(url)
         return df
-    except Exception as e:
-        st.error(f"Erro ao carregar os dados: {e}")
-        return None
+    except pd.errors.ParserError:
+        try:
+            # Tentativa 2: Especificar delimitador como ponto e vírgula
+            df = pd.read_csv(url, delimiter=';')
+            return df
+        except pd.errors.ParserError as e:
+            st.error(f"Erro ao carregar os dados: {e}")
+            return None
 
 # Carregar os dados
 df = load_data(url)
