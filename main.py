@@ -45,12 +45,15 @@ if df is not None:
 
         # Verificar se as colunas de latitude e longitude existem
         if 'latitude' in df.columns and 'longitude' in df.columns:
+            # Filtrar dados para remover valores NaN em latitude e longitude
+            df_filtered = df.dropna(subset=['latitude', 'longitude'])
+
             # Criar o mapa
             st.subheader("Mapa de Latitudes e Longitudes por Nome Bairro")
-            mapa = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=12)
+            mapa = folium.Map(location=[df_filtered['latitude'].mean(), df_filtered['longitude'].mean()], zoom_start=12)
 
             # Adicionar marcadores ao mapa
-            for index, row in df.iterrows():
+            for index, row in df_filtered.iterrows():
                 folium.Marker([row['latitude'], row['longitude']],
                               popup=row['nome_bairro']).add_to(mapa)
 
